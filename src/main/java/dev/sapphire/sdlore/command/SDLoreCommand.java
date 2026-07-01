@@ -9,7 +9,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,9 +30,9 @@ public final class SDLoreCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(
-            final @NonNull CommandSender sender,
-            final @NonNull Command command,
-            final @NonNull String label,
+            final @NotNull CommandSender sender,
+            final @NotNull Command command,
+            final @NotNull String label,
             final String[] args
     ) {
         if (args.length < 1) {
@@ -92,9 +92,9 @@ public final class SDLoreCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(
-            final @NonNull CommandSender sender,
-            final @NonNull Command command,
-            final @NonNull String alias,
+            final @NotNull CommandSender sender,
+            final @NotNull Command command,
+            final @NotNull String alias,
             final String[] args
     ) {
         if (args.length == 1) {

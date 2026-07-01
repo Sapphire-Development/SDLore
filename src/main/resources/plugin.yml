@@ -3,7 +3,7 @@ description: $description
 version: '${version}'
 
 main: dev.sapphire.sdlore.SDLore
-api-version: '1.21.8'
+api-version: '1.19'
 
 authors: [ Sapphire Development ]
 website: https://sapphi.dev/sdlore

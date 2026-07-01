@@ -1,0 +1,20 @@
+name: SDLore
+description: $description
+version: '${version}'
+
+main: dev.sapphire.sdlore.SDLore
+api-version: '1.21.8'
+
+authors: [ Sapphire Development ]
+website: https://sapphi.dev/sdlore
+
+commands:
+  sdlore:
+    description: SDLore commands
+    usage: /sdlore apply <id>
+
+permissions:
+  sdlore.apply:
+    default: op
+  sdlore.reload:
+    default: op

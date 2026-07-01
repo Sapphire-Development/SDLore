@@ -1,0 +1,16 @@
+messages:
+  prefix: "<#0069a8>SDLore <gray>\u00bb "
+  player-only: "<red>This command can only be used by players."
+  no-permission: "<red>You don't have permission to use this command."
+  usage: "<red>Usage: /sdlore apply <id>"
+  no-item: "<red>You must hold an item in your main hand."
+  lore-applied: "<green>Lore applied successfully to the item. (Took {time})"
+  no-metadata: "<red>The held item does not support metadata."
+  unknown-enchantment: "<red>Unknown enchantment id: {enchantment}"
+  config-reloaded: "<green>Configuration reloaded successfully."
+
+sound:
+  enabled: true
+  name: "entity.player.levelup"
+  volume: 1.0
+  pitch: 1.0

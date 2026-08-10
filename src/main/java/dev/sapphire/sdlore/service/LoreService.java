@@ -17,8 +17,10 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 public final class LoreService {
@@ -34,6 +36,10 @@ public final class LoreService {
     }
 
     public void applyLore(final Player player, final String loreId) {
+        applyLore(player, loreId, Collections.emptySet());
+    }
+
+    public void applyLore(final Player player, final String loreId, final Set<String> flags) {
         final long startedAt = System.nanoTime();
 
         apiClient.fetchLore(loreId).thenAccept(result -> Bukkit.getScheduler().runTask(plugin, () -> {
@@ -53,7 +59,7 @@ public final class LoreService {
                 return;
             }
 
-            applyLoreToItem(player, currentItem, result.getResponse());
+            applyLoreToItem(player, currentItem, result.getResponse(), flags);
 
             final long elapsedMillis = (System.nanoTime() - startedAt) / 1_000_000L;
             MessageUtil.sendSuccess(player, "lore-applied", Map.of("time", DurationUtil.format(elapsedMillis)));
@@ -61,7 +67,7 @@ public final class LoreService {
         }));
     }
 
-    private void applyLoreToItem(final Player player, final ItemStack itemStack, final LoreResponse loreResponse) {
+    private void applyLoreToItem(final Player player, final ItemStack itemStack, final LoreResponse loreResponse, final Set<String> flags) {
         final ItemMeta itemMeta = itemStack.getItemMeta();
 
         if (itemMeta == null) {
@@ -69,47 +75,57 @@ public final class LoreService {
             return;
         }
 
-        itemMeta.displayName(TextUtil.toComponent(loreResponse.getName()));
+        final boolean applyAll = flags.isEmpty();
 
-        if (loreResponse.getLore() != null) {
-            final List<Component> loreLines = loreResponse.getLore().stream()
-                    .map(TextUtil::toComponent)
-                    .toList();
-            itemMeta.lore(loreLines);
-        } else {
-            itemMeta.lore(null);
+        if (applyAll || flags.contains("name")) {
+            itemMeta.displayName(TextUtil.toComponent(loreResponse.getName()));
         }
 
-        for (final Enchantment enchantment : itemMeta.getEnchants().keySet()) {
-            itemMeta.removeEnchant(enchantment);
-        }
-
-        if (loreResponse.getEnchantments() != null) {
-            for (final LoreResponse.EnchantmentEntry entry : loreResponse.getEnchantments()) {
-                final Enchantment enchantment = Registry.ENCHANTMENT.get(NamespacedKey.minecraft(entry.getId()));
-
-                if (enchantment == null) {
-                    plugin.getLogger().log(Level.WARNING, "Unknown enchantment id: " + entry.getId());
-                    MessageUtil.sendError(player, "unknown-enchantment", Map.of("enchantment", entry.getId()));
-                    continue;
-                }
-
-                itemMeta.addEnchant(enchantment, entry.getLevel(), true);
+        if (applyAll || flags.contains("lore")) {
+            if (loreResponse.getLore() != null) {
+                final List<Component> loreLines = loreResponse.getLore().stream()
+                        .map(TextUtil::toComponent)
+                        .toList();
+                itemMeta.lore(loreLines);
+            } else {
+                itemMeta.lore(null);
             }
         }
 
-        if (loreResponse.getFlags() != null) {
-            for (final LoreResponse.FlagEntry entry : loreResponse.getFlags()) {
-                try {
-                    final ItemFlag flag = ItemFlag.valueOf(entry.getKey().toUpperCase());
+        if (applyAll || flags.contains("enchantments")) {
+            for (final Enchantment enchantment : itemMeta.getEnchants().keySet()) {
+                itemMeta.removeEnchant(enchantment);
+            }
 
-                    if (entry.isValue()) {
-                        itemMeta.addItemFlags(flag);
-                    } else {
-                        itemMeta.removeItemFlags(flag);
+            if (loreResponse.getEnchantments() != null) {
+                for (final LoreResponse.EnchantmentEntry entry : loreResponse.getEnchantments()) {
+                    final Enchantment enchantment = Registry.ENCHANTMENT.get(NamespacedKey.minecraft(entry.getId()));
+
+                    if (enchantment == null) {
+                        plugin.getLogger().log(Level.WARNING, "Unknown enchantment id: " + entry.getId());
+                        MessageUtil.sendError(player, "unknown-enchantment", Map.of("enchantment", entry.getId()));
+                        continue;
                     }
-                } catch (final IllegalArgumentException exception) {
-                    plugin.getLogger().log(Level.WARNING, "Unknown item flag: " + entry.getKey());
+
+                    itemMeta.addEnchant(enchantment, entry.getLevel(), true);
+                }
+            }
+        }
+
+        if (applyAll || flags.contains("flags")) {
+            if (loreResponse.getFlags() != null) {
+                for (final LoreResponse.FlagEntry entry : loreResponse.getFlags()) {
+                    try {
+                        final ItemFlag flag = ItemFlag.valueOf(entry.getKey().toUpperCase());
+
+                        if (entry.isValue()) {
+                            itemMeta.addItemFlags(flag);
+                        } else {
+                            itemMeta.removeItemFlags(flag);
+                        }
+                    } catch (final IllegalArgumentException exception) {
+                        plugin.getLogger().log(Level.WARNING, "Unknown item flag: " + entry.getKey());
+                    }
                 }
             }
         }

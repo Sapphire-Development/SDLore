@@ -13,12 +13,15 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public final class SDLoreCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> SUBCOMMANDS = List.of("apply", "reload");
+    private static final List<String> APPLY_FLAGS = List.of("--name", "--lore", "--enchantments", "--flags");
 
     private final SDLore plugin;
     private final LoreService loreService;
@@ -80,14 +83,33 @@ public final class SDLoreCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        final Set<String> flags = parseFlags(args);
+
+        for (final String flag : flags) {
+            if (!APPLY_FLAGS.contains("--" + flag)) {
+                MessageUtil.sendRawError(player, "Unknown flag: --" + flag);
+                return true;
+            }
+        }
+
         if (player.getInventory().getItemInMainHand().getType() == Material.AIR) {
             MessageUtil.sendError(player, "no-item");
             return true;
         }
 
-        loreService.applyLore(player, args[1]);
+        loreService.applyLore(player, args[1], flags);
 
         return true;
+    }
+
+    private Set<String> parseFlags(final String[] args) {
+        final Set<String> flags = new HashSet<>();
+        for (int i = 2; i < args.length; i++) {
+            if (args[i].startsWith("--")) {
+                flags.add(args[i].substring(2).toLowerCase(Locale.ROOT));
+            }
+        }
+        return flags;
     }
 
     @Override
@@ -109,6 +131,19 @@ public final class SDLoreCommand implements CommandExecutor, TabCompleter {
                         continue;
                     }
                     result.add(subcommand);
+                }
+            }
+
+            return result;
+        }
+
+        if (args.length >= 2 && args[0].equalsIgnoreCase("apply") && sender.hasPermission("sdlore.apply")) {
+            final List<String> result = new ArrayList<>();
+            final String last = args[args.length - 1].toLowerCase(Locale.ROOT);
+
+            for (final String flag : APPLY_FLAGS) {
+                if (flag.startsWith(last)) {
+                    result.add(flag);
                 }
             }
 

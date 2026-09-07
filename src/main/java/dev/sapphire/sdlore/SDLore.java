@@ -5,6 +5,7 @@ import dev.sapphire.sdlore.service.LoreService;
 import dev.sapphire.sdlore.service.SoundService;
 import dev.sapphire.sdlore.util.MessageUtil;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bstats.bukkit.Metrics;
 
 public final class SDLore extends JavaPlugin {
 

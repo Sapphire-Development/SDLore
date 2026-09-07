@@ -13,6 +13,9 @@ public final class SDLore extends JavaPlugin {
         saveDefaultConfig();
         MessageUtil.init(getConfig().getConfigurationSection("messages"));
 
+        int pluginId = 33901;
+        Metrics metrics = new Metrics(this, pluginId);
+
         final SoundService soundService = new SoundService(this);
         final LoreService loreService = new LoreService(this, soundService);
         final SDLoreCommand sdloreCommand = new SDLoreCommand(this, loreService);

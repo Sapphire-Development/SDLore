@@ -14,14 +14,22 @@ dependencies {
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(17)
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
 }
 
 tasks {
+    jar {
+        archiveClassifier = "thin"
+    }
+
     shadowJar {
-        configurations = listOf(project.configurations.runtimeClasspath.get())
+        archiveClassifier = ""
 
         relocate("org.bstats", "${project.group}.bstats")
+    }
+
+    build {
+        dependsOn(shadowJar)
     }
 
     processResources {

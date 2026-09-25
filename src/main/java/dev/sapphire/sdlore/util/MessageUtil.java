@@ -23,23 +23,27 @@ public final class MessageUtil {
     }
 
     public static void sendSuccess(final CommandSender sender, final String key) {
-        sender.sendMessage(MINI_MESSAGE.deserialize(PREFIX + getMessage(key)));
+        send(sender, getMessage(key));
     }
 
     public static void sendSuccess(final CommandSender sender, final String key, final Map<String, String> placeholders) {
-        sender.sendMessage(MINI_MESSAGE.deserialize(PREFIX + applyPlaceholders(getMessage(key), placeholders)));
+        send(sender, applyPlaceholders(getMessage(key), placeholders));
     }
 
     public static void sendError(final CommandSender sender, final String key) {
-        sender.sendMessage(MINI_MESSAGE.deserialize(PREFIX + getMessage(key)));
+        send(sender, getMessage(key));
     }
 
     public static void sendError(final CommandSender sender, final String key, final Map<String, String> placeholders) {
-        sender.sendMessage(MINI_MESSAGE.deserialize(PREFIX + applyPlaceholders(getMessage(key), placeholders)));
+        send(sender, applyPlaceholders(getMessage(key), placeholders));
     }
 
     public static void sendRawError(final CommandSender sender, final String message) {
-        sender.sendMessage(MINI_MESSAGE.deserialize(PREFIX + message));
+        send(sender, message);
+    }
+
+    private static void send(final CommandSender sender, final String message) {
+        sender.sendMessage(MINI_MESSAGE.deserialize(TextUtil.toMiniMessage(PREFIX + message)));
     }
 
     private static String getMessage(final String key) {

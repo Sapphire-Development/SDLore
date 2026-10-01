@@ -2,6 +2,7 @@ package dev.sapphire.sdlore.api;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import dev.sapphire.sdlore.util.DebugLogger;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -15,12 +16,14 @@ public final class LoreApiClient {
 
     private final HttpClient httpClient;
     private final Gson gson;
+    private final DebugLogger debug;
 
-    public LoreApiClient() {
+    public LoreApiClient(final DebugLogger debug) {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
         this.gson = new Gson();
+        this.debug = debug;
     }
 
     public CompletableFuture<LoreFetchResult> fetchLore(final String id) {
@@ -31,9 +34,18 @@ public final class LoreApiClient {
                 .timeout(Duration.ofSeconds(15))
                 .build();
 
+        final long startedAt = System.nanoTime();
+
         return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(this::parseResponse)
-                .exceptionally(throwable -> LoreFetchResult.failure("Failed to connect to the API: " + throwable.getMessage()));
+                .thenApply(response -> {
+                    debug.log(() -> "Response: HTTP " + response.statusCode() + " in " + (System.nanoTime() - startedAt) / 1_000_000L + "ms"
+                            + " (content-type: " + response.headers().firstValue("content-type").orElse("<none>") + ")");
+                    return parseResponse(response);
+                })
+                .exceptionally(throwable -> {
+                    debug.log(() -> "Request failed: " + throwable);
+                    return LoreFetchResult.failure("Failed to connect to the API: " + throwable.getMessage());
+                });
     }
 
     private LoreFetchResult parseResponse(final HttpResponse<String> response) {

@@ -21,7 +21,7 @@ import java.util.Set;
 public final class SDLoreCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> SUBCOMMANDS = List.of("apply", "reload");
-    private static final List<String> APPLY_FLAGS = List.of("--name", "--lore", "--enchantments", "--flags");
+    private static final List<String> APPLY_FLAGS = List.of("--name", "--lore", "--enchantments", "--flags", "--attributes");
 
     private final SDLore plugin;
     private final LoreService loreService;

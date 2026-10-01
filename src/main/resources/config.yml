@@ -1,3 +1,5 @@
+debug: false
+
 messages:
   prefix: "<#0069a8>SDLore <gray>\u00bb "
   player-only: "<red>This command can only be used by players."
@@ -7,6 +9,8 @@ messages:
   lore-applied: "<green>Lore applied successfully to the item. (Took {time})"
   no-metadata: "<red>The held item does not support metadata."
   unknown-enchantment: "<red>Unknown enchantment id: {enchantment}"
+  unknown-attribute: "<red>Unknown attribute id: {attribute}"
+  attributes-unsupported: "<red>Item attributes require Minecraft 1.21 or newer."
   config-reloaded: "<green>Configuration reloaded successfully."
 
 sound:

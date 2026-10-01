@@ -3,6 +3,7 @@ package dev.sapphire.sdlore.service;
 import dev.sapphire.sdlore.SDLore;
 import dev.sapphire.sdlore.api.LoreApiClient;
 import dev.sapphire.sdlore.api.LoreResponse;
+import dev.sapphire.sdlore.util.DebugLogger;
 import dev.sapphire.sdlore.util.DurationUtil;
 import dev.sapphire.sdlore.util.MessageUtil;
 import dev.sapphire.sdlore.util.TextUtil;
@@ -28,11 +29,15 @@ public final class LoreService {
     private final SDLore plugin;
     private final LoreApiClient apiClient;
     private final SoundService soundService;
+    private final AttributeService attributeService;
+    private final DebugLogger debug;
 
     public LoreService(final SDLore plugin, final SoundService soundService) {
         this.plugin = plugin;
-        this.apiClient = new LoreApiClient();
+        this.debug = new DebugLogger(plugin);
+        this.apiClient = new LoreApiClient(debug);
         this.soundService = soundService;
+        this.attributeService = new AttributeService(plugin, debug);
     }
 
     public void applyLore(final Player player, final String loreId) {
@@ -42,14 +47,19 @@ public final class LoreService {
     public void applyLore(final Player player, final String loreId, final Set<String> flags) {
         final long startedAt = System.nanoTime();
 
+        debug.log(() -> "Apply requested by " + player.getName() + ": id=" + loreId
+                + ", sections=" + (flags.isEmpty() ? "all" : String.join(",", flags)));
+
         apiClient.fetchLore(loreId).thenAccept(result -> Bukkit.getScheduler().runTask(plugin, () -> {
             if (!player.isOnline()) {
+                debug.log(() -> player.getName() + " went offline before the lore could be applied");
                 return;
             }
 
             final ItemStack currentItem = player.getInventory().getItemInMainHand();
 
             if (currentItem.getType() == Material.AIR) {
+                debug.log(() -> player.getName() + " is no longer holding an item");
                 MessageUtil.sendError(player, "no-item");
                 return;
             }
@@ -59,9 +69,11 @@ public final class LoreService {
                 return;
             }
 
+            debug.log(() -> "Applying to " + currentItem.getType() + " x" + currentItem.getAmount());
             applyLoreToItem(player, currentItem, result.getResponse(), flags);
 
             final long elapsedMillis = (System.nanoTime() - startedAt) / 1_000_000L;
+            debug.log(() -> "Apply finished in " + elapsedMillis + "ms");
             MessageUtil.sendSuccess(player, "lore-applied", Map.of("time", DurationUtil.format(elapsedMillis)));
             soundService.playApplySound(player);
         }));
@@ -71,6 +83,7 @@ public final class LoreService {
         final ItemMeta itemMeta = itemStack.getItemMeta();
 
         if (itemMeta == null) {
+            debug.log(() -> itemStack.getType() + " has no item meta");
             MessageUtil.sendError(player, "no-metadata");
             return;
         }
@@ -78,16 +91,19 @@ public final class LoreService {
         final boolean applyAll = flags.isEmpty();
 
         if (applyAll || flags.contains("name")) {
+            debug.log(() -> "Name: " + loreResponse.getName());
             itemMeta.displayName(TextUtil.toComponent(loreResponse.getName()));
         }
 
         if (applyAll || flags.contains("lore")) {
             if (loreResponse.getLore() != null) {
+                debug.log(() -> "Lore: " + loreResponse.getLore().size() + " line(s)");
                 final List<Component> loreLines = loreResponse.getLore().stream()
                         .map(TextUtil::toComponent)
                         .toList();
                 itemMeta.lore(loreLines);
             } else {
+                debug.log(() -> "Lore: none, clearing");
                 itemMeta.lore(null);
             }
         }
@@ -107,6 +123,7 @@ public final class LoreService {
                         continue;
                     }
 
+                    debug.log(() -> "Enchantment: " + entry.getId() + " " + entry.getLevel());
                     itemMeta.addEnchant(enchantment, entry.getLevel(), true);
                 }
             }
@@ -117,6 +134,7 @@ public final class LoreService {
                 for (final LoreResponse.FlagEntry entry : loreResponse.getFlags()) {
                     try {
                         final ItemFlag flag = ItemFlag.valueOf(entry.getKey().toUpperCase());
+                        debug.log(() -> "Flag: " + flag + "=" + entry.isValue());
 
                         if (entry.isValue()) {
                             itemMeta.addItemFlags(flag);
@@ -127,6 +145,15 @@ public final class LoreService {
                         plugin.getLogger().log(Level.WARNING, "Unknown item flag: " + entry.getKey());
                     }
                 }
+            }
+        }
+
+        if (applyAll || flags.contains("attributes")) {
+            if (attributeService.isSupported()) {
+                attributeService.applyAttributes(player, itemMeta, loreResponse.getAttributes());
+            } else if (loreResponse.getAttributes() != null && !loreResponse.getAttributes().isEmpty()) {
+                debug.log(() -> "Attributes: skipped, server does not support them");
+                MessageUtil.sendError(player, "attributes-unsupported");
             }
         }
 

@@ -8,6 +8,7 @@ public final class LoreResponse {
     private List<String> lore;
     private List<EnchantmentEntry> enchantments;
     private List<FlagEntry> flags;
+    private List<AttributeEntry> attributes;
     private String error;
 
     public String getName() {
@@ -24,6 +25,10 @@ public final class LoreResponse {
 
     public List<FlagEntry> getFlags() {
         return flags;
+    }
+
+    public List<AttributeEntry> getAttributes() {
+        return attributes;
     }
 
     public String getError() {
@@ -55,6 +60,30 @@ public final class LoreResponse {
 
         public boolean isValue() {
             return value;
+        }
+    }
+
+    public static final class AttributeEntry {
+
+        private String id;
+        private double amount;
+        private String operation;
+        private String slot;
+
+        public String getId() {
+            return id;
+        }
+
+        public double getAmount() {
+            return amount;
+        }
+
+        public String getOperation() {
+            return operation;
+        }
+
+        public String getSlot() {
+            return slot;
         }
     }
 }

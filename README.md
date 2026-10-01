@@ -58,6 +58,7 @@ The editor provides a rich web UI to craft item metadata using MiniMessage forma
 - **Lore Lines** — add, reorder, and remove lines with live preview
 - **Enchantments** — manage enchantment entries directly from the panel
 - **Flags** — manage item flags entries directly from the panel
+- **Attributes** — add attribute modifiers per equipment slot *(Minecraft 1.21+)*
 - **Game-like preview** — preview the item name and lore from the editor
 - **Generate Code** — export ready-to-use configuration
 
